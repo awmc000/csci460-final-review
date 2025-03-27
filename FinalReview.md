@@ -49,27 +49,7 @@
    - [HTTP](#http)  
    - [FTP](#ftp)  
 6. [POSIX system calls and the library functions covered in Project2](#posix-system-calls-and-the-library-functions-covered-in-project2)  
-7. [Exam Concepts Review](#exam-concepts-review)  
-   - [Sliding Window Protocol Calculations](#sliding-window-protocol-calculations)  
-   - [p-persistent CSMA/CD Protocol](#p-persistent-csmacd-protocol)  
-   - [Token Ring Protocol](#token-ring-protocol)  
-   - [Ethernet Padding](#ethernet-padding)  
-   - [Distance Vector Initialization](#distance-vector-initialization)  
-   - [Link State Packet Creation](#link-state-packet-creation)  
-   - [Routing Table from Link State Packets](#routing-table-from-link-state-packets)  
-   - [Subnetting Practice](#subnetting-practice)  
-   - [CIDR Address Aggregation](#cidr-address-aggregation)  
-   - [NAT Translation and Table Updates](#nat-translation-and-table-updates)  
-   - [ICMP Message Usages](#icmp-message-usages)  
-   - [ARP and Proxy ARP](#arp-and-proxy-arp)  
-   - [DHCP Workflow](#dhcp-workflow)  
-   - [TCP Congestion Window Growth](#tcp-congestion-window-growth)  
-   - [UDP Checksum Calculation](#udp-checksum-calculation)  
-   - [TCP Buffering and Segment Exchange](#tcp-buffering-and-segment-exchange)  
-   - [Steps in Web Page Fetching](#steps-in-web-page-fetching)  
-   - [Recursive vs Iterative DNS Queries](#recursive-vs-iterative-dns-queries)  
-   - [System Call Usages](#system-call-usages)  
-
+7. [Answers to Sample Questions](#sample-questions)
 ---
 
 ## Data Link Layer
@@ -78,13 +58,59 @@
 
 #### Stop and Wait Protocol
 
+#### 1-bit Sliding Window Protocol
+
+```c
+void protocol4(void) {
+    seq_nr next_frame_to_send;   /* 0 or 1 only */
+    seq_nr frame_expected;       /* 0 or 1 only */
+    frame r, s;                  /* scratch variables */
+    packet buffer;              /* current packet being sent */
+    event_type event;
+
+    next_frame_to_send = 0;     /* next frame on the outbound stream */
+    frame_expected = 0;         /* frame expected next */
+
+    from_network_layer(&buffer);   /* fetch a packet from the network layer */
+    s.info = buffer;               /* prepare to send the initial frame */
+    s.seq = next_frame_to_send;    /* insert sequence number into frame */
+    s.ack = 1 < frame_expected;    /* piggybacked ack */
+    to_physical_layer(&s);         /* transmit the frame */
+    start_timer(s.seq);            /* start the timer running */
+
+    while (true) {
+        wait_for_event(&event);    /* frame arrival, cksum err, or timeout */
+
+        if (event == frame_arrival) {
+            from_physical_layer(&r);   /* go get it */
+
+            if (r.seq == frame_expected) {
+                to_network_layer(&r.info);   /* pass packet to network layer */
+                inc(frame_expected);         /* invert seq number expected next */
+            }
+
+            if (r.ack == next_frame_to_send) {
+                stop_timer(r.ack);           /* turn the timer off */
+                from_network_layer(&buffer); /* fetch new pkt from network layer */
+                inc(next_frame_to_send);     /* invert sender’s sequence number */
+            }
+        }
+
+        s.info = buffer;               /* construct outbound frame */
+        s.seq = next_frame_to_send;   /* insert sequence number into it */
+        s.ack = 1 < frame_expected;   /* seq number of last received frame */
+        to_physical_layer(&s);        /* transmit a frame */
+        start_timer(s.seq);           /* start the timer running */
+    }
+}
+
+```
+
 #### Sliding Window Protocol
 
 #### Sliding Window Protocol with Go Back N
 
 #### Sliding Window Protocol with Selective Repeat
-
-#### 1-bit Sliding Window Protocol
 
 ---
 
@@ -197,8 +223,24 @@ sending.
 
 
 #### CSMA with Collision Detection (CSMA/CD)
+- In a CSMA/CD protocol, the nodes can detect when a collision
+is happening and stop transmitting since the frame is a lost cause.
+- The detection is an analog process. The node's hardware
+reads the signal, and if it differs from what it is sending out
+a collision is occuring.
+- The Ethernet MAC protocol includes the following in addition
+to basic CSMA/CD.
+- If the node detects collision, it stops transmitting
+immediately, *and* sends the 48 bit jam signal.
+- After sending the jam signal, the node enters 
+**exponential backoff**. 
 
 #### Binary Exponential Backoff Algorithm in CSMA/CD
+- After the $n$ th collision, the node chooses a random $K$
+from $\{ 1, 2, \cdots, 2^{m - 1} \}$ where $m=\min(n, 10)$.
+- The node waits $512K$ bit times and then attempts transmission.
+- For example, If the rate is 10mbps, a bit is transmitted 
+every microsecond.
 
 ### Classic Ethernet
 
@@ -272,45 +314,107 @@ sending.
 
 ---
 
-## Exam Concepts Review
+## Sample Questions
 
-### Sliding Window Protocol Calculations
+1. If 8-bit sequence number field is being used in a sliding window protocol with Go back N, what
+is the maximum possible sequence number and why? What is the maximum possible window
+size at the sender and why? What is the maximum possible window size at the receiver and
+why? 15 points
 
-### p-persistent CSMA/CD Protocol
+2. Assume a data link layer sender sends 15 data frames with Go back N sliding window protocol
+and 3-bit sequence and acknowledgment numbers, show successive sender and receiver
+windows, data frames, and acknowledgement frames when all the frames are transmitted and
+received successfully except the 3rd, 8th, and 11th data frames get lost at the first attempt. 25
+points
 
-### Token Ring Protocol
+3. Assume sliding window protocol with Go back N and 4-bit sequence number are being used and
+the current sender and receiver windows (highlighted) are as below. How many frames have
+already been sent at the least? How many acknowledgements have been received at the least?
+How many acknowledgements are pending? Will receiver acknowledge a frame if it arrives with
+a sequence number 1? Give the rationale of your answers. 15 points
 
-### Ethernet Padding
+4. Explain how p-persistent CSMA/CD multiple access protocol works. 15 points
 
-### Distance Vector Initialization
+- When an adapter has a frame to send, it first senses the channel.
+- If the channel is free, it has a $p$ probability of sending and a $q=1-p$ probability of
+deferring to the next slot.
+- The process repeats until either the frame is sent or there is a collision.
+- If there is a collision, the adapter waits a random time and starts the process again.
 
-### Link State Packet Creation
+5. Explain how Token Ring multiple access protocol works. 15 points
 
-### Routing Table from Link State Packets
+- Nodes only send frames when they are in posession of a special packet called the 
+token, which they send from one node to the next.
+- When they receive the token...
+  - If they have no frames they immediately forward the token.
+  - If they have frames to send, they send them, up to some maximum; then they forward the token.
 
-### Subnetting Practice
+6. What is the purpose of Pad bytes in an Ethernet frame? 10 points
 
-### CIDR Address Aggregation
+7. If the nodes in a network are connected as shown below, what is the initial distance vector in
+each node? 25 points
 
-### NAT Translation and Table Updates
+8. If the nodes in a network are connected as shown below, what will be link state packet contents
+in each node? 25 points
 
-### ICMP Message Usages
+9. If a network has following link state packets flooded among its nodes, what is the graph model
+of the network and what will be the routing table entries at node C? Show how you have
+computed the routing table entries. 25 points
 
-### ARP and Proxy ARP
+10. If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D. The
+number of hosts in these departments are given in the table below. Create one subnet for each
+department minimizing the wastage of host addresses in your network. What will be the subnet
+addresses of these departments in your network? Show how you have computed the subnet
+addresses. 15 points
 
-### DHCP Workflow
+11. If an IP router has following IP addresses in its routing table entries, what IP addresses will it
+advertise? Show how you have computed the aggregated IP address. 10 points
 
-### TCP Congestion Window Growth
+12. Assume a NAT box with public IP address 140.234.20.239 receives IP packets with following
+source and destination IPs and ports from the private hosts of its private network when its NAT
+table is empty. Assume the IP packets have arrived in the order shown in the table below. What
+will be the translated source and destination IPs and ports for these IP packets in order to send
+them through the Internet? What will be NAT table entries after translating all the above IP
+packets? 15 points
 
-### UDP Checksum Calculation
+13. Give 2 examples of ICMP message usages. 10 points
 
-### TCP Buffering and Segment Exchange
+14. Explain how ARP and Proxy ARP works. 15 points
 
-### Steps in Web Page Fetching
+15. Explain how DHCP protocol works. 10 points
 
-### Recursive vs Iterative DNS Queries
+16. If a TCP sender’s current congestion window is 16KB and its current slow-start-threshold is
+64KB and there is no segment loss, what will be its congestion window after 12 th RTT from now
+and why? 10 points
 
-### System Call Usages
+17. How do you compute UDP checksum? 10 points
 
----
+18. A TCP receiver has 6KB buffer and it does not pass the received data to the upper layer until the
+buffer is full or the connection is terminating. The TCP sender on the other end has 30KB data to
+send and the maximum segment size (MSS) has been negotiated to 4KB, i.e., the sender needs
+to send multiple TCP segments to send 30KB data. Show all the data and acknowledgement
+segments in sequence that are being sent and received by the sender and the receiver
+respectively. Show the successive sequence number and the data size of the data segments.
+Show the successive acknowledgement number and the window size of the acknowledgement
+segments. 25 points
 
+19. What steps a web browser takes to browse a web page from a web server? What steps a web
+server takes to serve a web page to a web browser? 10 points
+
+- For a web browser to retrieve a web page, it must:
+  - Make a DNS request to resolve the hostname into an IP address.
+  - Make an HTTP GET request for the page.
+  - Render the markup to the display.
+- For a web server to serve a web page, it must:
+  - Run a server process constantly on an address and
+  port open to the Internet.
+  - The process must serve responses to HTTP requests
+  made by incoming connections.
+
+20. Give the examples of both recursive and iterative DNS queries, 15 points
+
+21. Explain the use of following networking system functions. 20 points
+a. getaddrinfo()
+b. bind()
+c. listen()
+d. accept()
