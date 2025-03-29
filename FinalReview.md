@@ -58,6 +58,18 @@
 
 #### Stop and Wait Protocol
 
+Rules for sender:
+- Send one packet at a time.
+- Send next packet only after receiving ACK for previous.
+
+Rule for receiver:
+- Receive and consume 1 packet then send ACK.
+
+With ARQ:
+- Sequence numbers attached to packets.
+- If ACK not received after some timer goes off on sender side,
+sender resends the frame.
+
 #### 1-bit Sliding Window Protocol
 
 ```c
@@ -321,11 +333,74 @@ is the maximum possible sequence number and why? What is the maximum possible wi
 size at the sender and why? What is the maximum possible window size at the receiver and
 why? 15 points
 
+maximum possible sequence number is 255 because that is the largest number we can store
+in 8 bits: 1111 1111
+
+The sender window needs to be one frame smaller than the receiving window in the Go
+Back N Sliding Window protocol. This prevents the following.
+- Senders sends 256 frames.
+- Receiver receives and acknowledges all. All ACKs are lost!
+- Sender times out on 256 frames and resends them.
+- Receiver interprets these as 256 new frames. The protocol has failed.
+
+The receiver window is always 1 frame in Go Back N. Out of order frames are not accepted.
+The receiver discards all subsequent frames. Since they receive no ack in return they 
+will be resent.
+
 2. Assume a data link layer sender sends 15 data frames with Go back N sliding window protocol
 and 3-bit sequence and acknowledgment numbers, show successive sender and receiver
 windows, data frames, and acknowledgement frames when all the frames are transmitted and
 received successfully except the 3rd, 8th, and 11th data frames get lost at the first attempt. 25
 points
+
+Notes
+- 3 bit sequence and ack numbers $\implies$ sender window of 7, recvr window of 1
+- Fails at 3rd, 8th, 11th
+
+```
+
+Send 1 as 0, ack received
+Send 2 as 1, ack received
+Send 3 as 2, no ack received
+Send 4 as 3, ...
+Send 5 as 4
+Send 6 as 5
+Send 7 as 6
+
+Ack for 3 never received, 3 times out, resend window from 3
+Receiver discarded all frames after 3.
+
+Send 3 as 3, ack received
+Send 4 as 4, ack received
+Send 5 as 5, ack received
+Send 6 as 6, ack received
+Send 7 as 0, ack received
+Send 8 as 1, ...
+Send 9 as 2
+
+Ack for 8 never received, 8 times out, resend window from 8
+Receiver discarded all frames after 8 (just 9).
+
+Send 8 as 1, ack received
+Send 9 as 2, ack received
+Send 10 as 3, ack received
+Send 11 as 4, ...
+Send 12 as 5
+Send 13 as 6
+Send 14 as 7
+
+Ack for 11 never received, 11 times out, resend window from 11
+Receiver discarded all frames after 11 (12, 13, 14).
+
+Send 11 as 4
+Send 12 as 5
+Send 13 as 6
+Send 14 as 7
+Send 15 as 0
+
+Transfer complete
+
+```
 
 3. Assume sliding window protocol with Go back N and 4-bit sequence number are being used and
 the current sender and receiver windows (highlighted) are as below. How many frames have
@@ -351,11 +426,40 @@ token, which they send from one node to the next.
 
 6. What is the purpose of Pad bytes in an Ethernet frame? 10 points
 
-7. If the nodes in a network are connected as shown below, what is the initial distance vector in
-each node? 25 points
+When a payload is less than the minimum length pad bytes are added.
+The minimum is 64 bytes.
+
+7. If the nodes in a network are connected as shown below, what is the initial distance vector in each node? 25 points
+
+
 
 8. If the nodes in a network are connected as shown below, what will be link state packet contents
 in each node? 25 points
+
+Template:
+
+
+| Node | Distance |
+|------|----------|
+| A    | --       | 
+| B    | --       | 
+| D    | --       | 
+| E    | --       | 
+| F    | --       | 
+| H    | --       | 
+| I    | --       |
+
+A:
+
+| Node | Distance |
+|------|----------|
+| A    | 0        | 
+| B    | 9        | 
+| D    | 2        | 
+| E    | 4        | 
+| F    | inf      | 
+| H    | inf      | 
+| I    | inf       |
 
 9. If a network has following link state packets flooded among its nodes, what is the graph model
 of the network and what will be the routing table entries at node C? Show how you have
