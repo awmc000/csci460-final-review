@@ -328,7 +328,7 @@ every microsecond.
 
 ## Sample Questions
 
-1. If 8-bit sequence number field is being used in a sliding window protocol with Go back N, what
+## If 8-bit sequence number field is being used in a sliding window protocol with Go back N, what
 is the maximum possible sequence number and why? What is the maximum possible window
 size at the sender and why? What is the maximum possible window size at the receiver and
 why? 15 points
@@ -347,7 +347,7 @@ The receiver window is always 1 frame in Go Back N. Out of order frames are not 
 The receiver discards all subsequent frames. Since they receive no ack in return they 
 will be resent.
 
-2. Assume a data link layer sender sends 15 data frames with Go back N sliding window protocol
+## Assume a data link layer sender sends 15 data frames with Go back N sliding window protocol
 and 3-bit sequence and acknowledgment numbers, show successive sender and receiver
 windows, data frames, and acknowledgement frames when all the frames are transmitted and
 received successfully except the 3rd, 8th, and 11th data frames get lost at the first attempt. 25
@@ -400,15 +400,17 @@ Send 15 as 0
 
 Transfer complete
 
+State of windows:
+
 ```
 
-3. Assume sliding window protocol with Go back N and 4-bit sequence number are being used and
+## Assume sliding window protocol with Go back N and 4-bit sequence number are being used and
 the current sender and receiver windows (highlighted) are as below. How many frames have
 already been sent at the least? How many acknowledgements have been received at the least?
 How many acknowledgements are pending? Will receiver acknowledge a frame if it arrives with
 a sequence number 1? Give the rationale of your answers. 15 points
 
-4. Explain how p-persistent CSMA/CD multiple access protocol works. 15 points
+## Explain how p-persistent CSMA/CD multiple access protocol works. 15 points
 
 - When an adapter has a frame to send, it first senses the channel.
 - If the channel is free, it has a $p$ probability of sending and a $q=1-p$ probability of
@@ -416,7 +418,7 @@ deferring to the next slot.
 - The process repeats until either the frame is sent or there is a collision.
 - If there is a collision, the adapter waits a random time and starts the process again.
 
-5. Explain how Token Ring multiple access protocol works. 15 points
+## Explain how Token Ring multiple access protocol works. 15 points
 
 - Nodes only send frames when they are in posession of a special packet called the 
 token, which they send from one node to the next.
@@ -424,17 +426,16 @@ token, which they send from one node to the next.
   - If they have no frames they immediately forward the token.
   - If they have frames to send, they send them, up to some maximum; then they forward the token.
 
-6. What is the purpose of Pad bytes in an Ethernet frame? 10 points
+## What is the purpose of Pad bytes in an Ethernet frame? 10 points
 
 When a payload is less than the minimum length pad bytes are added.
 The minimum is 64 bytes.
 
-7. If the nodes in a network are connected as shown below, what is the initial distance vector in each node? 25 points
+## If the nodes in a network are connected as shown below, what is the initial distance vector in each node? 25 points
 
 
-
-8. If the nodes in a network are connected as shown below, what will be link state packet contents
-in each node? 25 points
+Humayun: Don't list non-adjacent nodes as having infinite distance, 
+they aren't known of at all by the host, so just omit them
 
 Template:
 
@@ -461,39 +462,95 @@ A:
 | H    | inf      | 
 | I    | inf       |
 
-9. If a network has following link state packets flooded among its nodes, what is the graph model
+
+## If the nodes in a network are connected as shown below, what will be link state packet contents in each node?
+
+## If a network has following link state packets flooded among its nodes, what is the graph model
 of the network and what will be the routing table entries at node C? Show how you have
 computed the routing table entries. 25 points
 
-10. If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D. The
+## If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D. The
 number of hosts in these departments are given in the table below. Create one subnet for each
 department minimizing the wastage of host addresses in your network. What will be the subnet
 addresses of these departments in your network? Show how you have computed the subnet
 addresses. 15 points
 
-11. If an IP router has following IP addresses in its routing table entries, what IP addresses will it
+## If an IP router has following IP addresses in its routing table entries, what IP addresses will it
 advertise? Show how you have computed the aggregated IP address. 10 points
 
-12. Assume a NAT box with public IP address 140.234.20.239 receives IP packets with following
+## Assume a NAT box with public IP address 140.234.20.239 receives IP packets with following
 source and destination IPs and ports from the private hosts of its private network when its NAT
 table is empty. Assume the IP packets have arrived in the order shown in the table below. What
 will be the translated source and destination IPs and ports for these IP packets in order to send
 them through the Internet? What will be NAT table entries after translating all the above IP
 packets? 15 points
 
-13. Give 2 examples of ICMP message usages. 10 points
+## Give 2 examples of ICMP message usages. 10 points
 
-14. Explain how ARP and Proxy ARP works. 15 points
+- Ping
+- Address not reachable
 
-15. Explain how DHCP protocol works. 10 points
+## Explain how ARP and Proxy ARP works. 15 points
 
-16. If a TCP sender’s current congestion window is 16KB and its current slow-start-threshold is
-64KB and there is no segment loss, what will be its congestion window after 12 th RTT from now
-and why? 10 points
+The Address Resolution protocol resolves IP addresses to MAC addresses
+also known as LAN addresses, a layer 2 means of identifying hosts.
 
-17. How do you compute UDP checksum? 10 points
+Devices keep a table that maps IP addresses to MAC addresses. This is the
+ARP table or ARP cache.
 
-18. A TCP receiver has 6KB buffer and it does not pass the received data to the upper layer until the
+The following primitives/features are used.
+ARP request: a broadcast message seeking any host that can resolve some
+IP into a MAC.
+ARP reply: a unicast message sending the desired MAC address back to a 
+requesting host.
+Gratuitous ARP: A host that has just joined the network makes a request
+for itself so that when it responds, other hosts will all have the MAC 
+address in their cache.
+
+
+Proxy ARP works like so. A needs to send a datagram to B, but they
+are on different LANs or subnets. So A creates a datagram with
+the destination of B. It encapsulates this in a frame with destination
+set to the gateway router that stands between A and the other
+network or subnet. When the router extracts the IP datagram from
+the ethernet frame, it sees the new destination B and forwards it to B.
+
+## Explain how DHCP protocol works. 10 points
+
+- DHCPDISCOVER: Client looks for DHCP server
+- DHCPOFFER: Server offers IP address
+- DHCPREQUEST: Client accepts IP address
+- DHCPACK: Server confirms lease, transaction complete
+
+## If a TCP sender’s current congestion window is 16KB, 
+and its current slow-start-threshold is 64KB and there is no segment loss, 
+what will be its congestion window after 12 th RTT from now and why? 10 points
+
+The TCP sender will double its CWND until reaching the threshold. For the
+remaining RTTs it will increase CWND size by one MSS (additive increase).
+
+```
+0: 16
+1: 32
+2: 64 (hit threshold - enter CA/AIMD phase)
+3: 64 + 1 MSS
+  .
+  .
+  .
+11: 64 + 9 MSS
+```
+
+## How do you compute UDP checksum? 10 points
+
+- Treat the UDP segment as a sequence of 16 bit integers, or equivalently, 4 hex digits.
+- Sum them normally and if there is any carry, eg. a 17th bit due to carries, add it to
+the LSB side. This is "wraparound".
+- Store this sum in the checksum field.
+
+
+
+
+## A TCP receiver has 6KB buffer and it does not pass the received data to the upper layer until the
 buffer is full or the connection is terminating. The TCP sender on the other end has 30KB data to
 send and the maximum segment size (MSS) has been negotiated to 4KB, i.e., the sender needs
 to send multiple TCP segments to send 30KB data. Show all the data and acknowledgement
@@ -502,7 +559,7 @@ respectively. Show the successive sequence number and the data size of the data 
 Show the successive acknowledgement number and the window size of the acknowledgement
 segments. 25 points
 
-19. What steps a web browser takes to browse a web page from a web server? What steps a web
+## What steps a web browser takes to browse a web page from a web server? What steps a web
 server takes to serve a web page to a web browser? 10 points
 
 - For a web browser to retrieve a web page, it must:
@@ -515,9 +572,9 @@ server takes to serve a web page to a web browser? 10 points
   - The process must serve responses to HTTP requests
   made by incoming connections.
 
-20. Give the examples of both recursive and iterative DNS queries, 15 points
+## Give the examples of both recursive and iterative DNS queries, 15 points
 
-21. Explain the use of following networking system functions. 20 points
+## Explain the use of following networking system functions. 20 points
 a. getaddrinfo()
 b. bind()
 c. listen()
