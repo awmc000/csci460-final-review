@@ -454,14 +454,60 @@ A:
 
 | Node | Distance |
 |------|----------|
-| A    | 0        | 
 | B    | 9        | 
 | D    | 2        | 
 | E    | 4        | 
-| F    | inf      | 
-| H    | inf      | 
-| I    | inf       |
 
+B:
+
+| Node | Distance |
+|------|----------|
+| A    | 9        | 
+| E    | 5        | 
+| F    | 6        | 
+
+D:
+
+| Node | Distance |
+|------|----------|
+| A    | 2        | 
+| E    | 6        | 
+| H    | 3        | 
+
+E:
+
+| Node | Distance |
+|------|----------|
+| A    | 4        | 
+| B    | 5        | 
+| D    | 6        | 
+| F    | 13       | 
+| H    | 5        | 
+| I    | 4        | 
+
+F:
+
+| Node | Distance |
+|------|----------|
+| B    | 6        | 
+| E    | 13       | 
+| I    | 7        | 
+
+H:
+
+| Node | Distance |
+|------|----------|
+| D    | 3        | 
+| E    | 5        | 
+| I    | 9        | 
+
+I:
+
+| Node | Distance |
+|------|----------|
+| H    | 9        | 
+| E    | 4        | 
+| F    | 7        | 
 
 ## If the nodes in a network are connected as shown below, what will be link state packet contents in each node?
 
@@ -469,11 +515,65 @@ A:
 of the network and what will be the routing table entries at node C? Show how you have
 computed the routing table entries. 25 points
 
-## If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D. The
-number of hosts in these departments are given in the table below. Create one subnet for each
+## If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D.
+The number of hosts in these departments are given in the table below. Create one subnet for each
 department minimizing the wastage of host addresses in your network. What will be the subnet
 addresses of these departments in your network? Show how you have computed the subnet
 addresses. 15 points
+
+### Subdivision 1: Department D needs 800 hosts.
+
+Start with `104.142.0.0/16`.
+
+This has the mask `FF.FF.0.0`.
+
+The current network portion length is 16. To accomodate 800 hosts, the closest power of 2 is 1024
+which is $2^{10}$. 
+
+So we need 10 bits to be in the host portion. So our new length will be 22.
+
+Network address: `104.142.0.0/22`
+
+Mask: `FF.FF.1111  1100 . 0000  0000`
+
+Range: `104.142.0.0/22 to 104.142.3.255/22`
+
+Next available address will be `104.142.4.0`
+
+### Subdivision 2: Department C needs 400 hosts.
+
+Start with `104.142.4.0/16`.
+
+400 hosts is about half so we will need about half as much length for hosts. 
+Network portion length of 23 would allow 2^9 or 512 hosts.
+
+Network address: `104.142.4.0/23`
+
+Mask: `FF.FF.1111  1110 . 0000  0000`
+
+Range: `104.142.4.0/23 to 104.142.5.255/23`
+
+Next available address will be `104.142.6.0`
+
+### Subdivision 3: Department B needs 200 hosts.
+
+Network portion length of 24 would allow for 2^8 or 255 hosts.
+
+Mask: `FF.FF.FF.0`
+
+Range: `104.142.6.0/24 to 104.142.6.255/24`
+
+Next available address will be `104.142.7.0`
+
+### Subdivision 4: Department A needs 100 hosts.
+
+Network portion length of 25 would allow for 2^7 or 128 hosts.
+
+Mask: `FF.FF.FF.1000 0000`
+
+Range: `104.142.7.0/25 to 104.142.7.127/25`.
+
+Subdivision complete.
 
 ## If an IP router has following IP addresses in its routing table entries, what IP addresses will it
 advertise? Show how you have computed the aggregated IP address. 10 points
@@ -504,17 +604,12 @@ IP into a MAC.
 ARP reply: a unicast message sending the desired MAC address back to a 
 requesting host.
 Gratuitous ARP: A host that has just joined the network makes a request
-for itself so that when it responds, other hosts will all have the MAC 
-address in their cache.
-
-
-Proxy ARP works like so. A needs to send a datagram to B, but they
-are on different LANs or subnets. So A creates a datagram with
-the destination of B. It encapsulates this in a frame with destination
-set to the gateway router that stands between A and the other
-network or subnet. When the router extracts the IP datagram from
-the ethernet frame, it sees the new destination B and forwards it to B.
-
+for the MAC of its own IP address to proactively update other hosts' 
+ARP caches.
+Proxy ARP: The router stands in place of every other host (on other
+subnets, elsewhere on the internetwork, etc.). When a host requests
+an outside address, the router returns its own MAC address so that
+it can act as a proxy.
 ## Explain how DHCP protocol works. 10 points
 
 - DHCPDISCOVER: Client looks for DHCP server
