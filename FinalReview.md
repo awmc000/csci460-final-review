@@ -410,6 +410,19 @@ already been sent at the least? How many acknowledgements have been received at 
 How many acknowledgements are pending? Will receiver acknowledge a frame if it arrives with
 a sequence number 1? Give the rationale of your answers. 15 points
 
+From the sender window:
+- All sequence numbers but 5 can be sent.
+- At the beginning, the out of range sequence number would have been 15.
+- So the window must have been advanced 6 times $\equiv$ 6 ACKs received.
+- This advance happens when ACK is received. So ACK must have been
+received for frames with SEQ numbers 0, 1, 2, 3, 4, 5.
+- Acknowledgements are pending for 9 frames (15 in window - 6 acked).
+
+From the receiver window:
+- Expecting sequence number 6 only. That means sequence numbers [0,  5]
+have been received. At least 6 frames have been received.
+- Sequence number 1 is not in the receiver window, so it would not be accepted.
+
 ## Explain how p-persistent CSMA/CD multiple access protocol works. 15 points
 
 - When an adapter has a frame to send, it first senses the channel.
@@ -511,9 +524,35 @@ I:
 
 ## If the nodes in a network are connected as shown below, what will be link state packet contents in each node?
 
-## If a network has following link state packets flooded among its nodes, what is the graph model
+Doing just 1 node to show the algorithm but save time.
+
+### Node A
+
+| Node | Distance & Path |
+|------|-----------------|
+| B    | 9 AB     | 
+| D    | 2 AD     | 
+| E    | 4 AE     | 
+| F    | 15 ABF   | 
+| H    | 5  ADH   | 
+| I    | 8  AEI   |
+
+## 9. If a network has following link state packets flooded among its nodes, what is the graph model
 of the network and what will be the routing table entries at node C? Show how you have
 computed the routing table entries. 25 points
+
+![](graph.png)
+
+Routing table at C:
+
+| Destination | Next Hop |
+|-------------|----------|
+| A | F
+| B | F
+| D | F
+| E | D
+| F | F 
+| G | F
 
 ## If your network address is 104.142.0.0/16 and you have 4 departments A, B, C, and D.
 The number of hosts in these departments are given in the table below. Create one subnet for each
@@ -669,8 +708,62 @@ server takes to serve a web page to a web browser? 10 points
 
 ## Give the examples of both recursive and iterative DNS queries, 15 points
 
+![](dnsquery.png)
+
 ## Explain the use of following networking system functions. 20 points
-a. getaddrinfo()
-b. bind()
-c. listen()
-d. accept()
+### a. getaddrinfo()
+
+Signature: 
+```c
+int getaddrinfo(
+  char* node, 
+  char* service,
+  struct addrinfo * hints,
+  struct addrinfo ** res);
+```
+
+getaddrinfo() converts human-readable text strings representing hostnames or 
+IP addresses into a dynamically allocated linked list of struct addrinfo 
+structures. The function prototype for this function is specified as follows:
+
+hostname
+    can be either a domain name, such as "example.com", an address string, such as "127.0.0.1", or NULL, in which case the address 0.0.0.0 or 127.0.0.1 is assigned depending on the hints flags.
+service
+    can be a port number passed as string, such as "80", or a service name, e.g. "echo". In the latter case a typical implementation uses getservbyname() to query the file /etc/services to resolve the service to a port number.
+hints
+    can be either NULL or an addrinfo structure with the type of service requested.
+res
+    is a pointer that points to a new addrinfo structure with the information requested after successful completion of the function.[3] The function returns 0 upon success and non-zero error value if it fails.
+
+Returns 0 on success, sets `res` to 
+one or more addrinfo structures.
+
+### b. bind()
+
+```c
+int bind(int fd, struct sockaddr * addr, int addrlen)
+```
+
+Binds a socket to a port so it can receive data.
+
+### c. listen()
+
+```c
+int listen(int fd, int backlog)
+```
+
+Tells the socket to wait for incoming connections and allow
+a given number of connections to queue.
+
+### d. accept()
+
+```c
+int accept(int fd, struct sockaddr * addr, socklen_t * len)
+```
+
+Accepts a connection on given FD. 
+
+Returns new FD.
+Fills in `addr` with peer address. The `len` should point to length
+of `addr` at call, and will be filled with actual length of address
+at return.
