@@ -285,6 +285,20 @@ every microsecond.
 
 #### Link State Routing
 
+- Centralized
+- Topography known to all nodes
+- Link state packets have the following format
+
+```
+|    A    |
+|---------|
+| Seq Num |
+|   Age   |
+|---------|
+| B |  3  |
+| C |  2  |
+| D |  9  |
+```
 ### Internet Protocol (IP)
 
 #### IP Header
@@ -297,6 +311,25 @@ every microsecond.
 
 #### Address Resolution Protocol (ARP)
 
+The Address Resolution protocol resolves IP addresses to MAC addresses
+also known as LAN addresses, a layer 2 means of identifying hosts.
+
+Devices keep a table that maps IP addresses to MAC addresses. This is the
+ARP table or ARP cache.
+
+The following primitives/features are used.
+ARP request: a broadcast message seeking any host that can resolve some
+IP into a MAC.
+ARP reply: a unicast message sending the desired MAC address back to a 
+requesting host.
+Gratuitous ARP: A host that has just joined the network makes a request
+for the MAC of its own IP address to proactively update other hosts' 
+ARP caches.
+Proxy ARP: The router stands in place of every other host (on other
+subnets, elsewhere on the internetwork, etc.). When a host requests
+an outside address, the router returns its own MAC address so that
+it can act as a proxy.
+
 #### Dynamic Host Configuration Protocol (DHCP)
 
 #### Internet Control Message Protocol (ICMP)
@@ -307,9 +340,29 @@ every microsecond.
 
 ### User Datagram Protocol (UDP)
 
+- best-effort datagram protocol
+- no SEQ or ACK
+- no flow or congestion control
+
 ### Transport Control Protocol (TCP)
 
+- Connection-oriented
+- Point to point, reliable, in-order *byte stream*
+
 #### TCP Segment Header
+
+- Source port
+- Destination port
+- Sequence number: Byte stream number of first byte in segment's data
+- Acknowledgement number: Sequence number of next byte expected from other side. 
+  - Cumulative ACK for all students
+- Header length
+- Flags
+- Receive window
+- Internet checksum
+- Urgent data pointer
+- Options
+- Application data
 
 #### TCP Connection
 
@@ -325,9 +378,19 @@ every microsecond.
 
 ### DNS
 
+- DHCPDISCOVER: Broadcast, host is looking for a DHCP server.
+- DHCPOFFER: Unicast, server offers an IP to the requesting host.
+- DHCPREQUEST: Unicast, host accepts IP.
+- DHCPACK: Unicast, server acknowledges, concluding transaction.
+
 ### HTTP
 
+- HTTP methods: GET, POST, PUT, DELETE, OPTIONS, etc.
+- Access/serve resources
+
 ### FTP
+
+- Client connection and data connection
 
 ---
 
